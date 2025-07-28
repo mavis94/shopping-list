@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搬家购物清单 - Google Drive云端同步</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .progress-bar {
+            background: rgba(255,255,255,0.2);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: #4CAF50;
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .sync-status {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .sync-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+        }
+
+        .sync-indicator.syncing {
+            background: #ffa726;
+            animation: pulse 1s infinite;
+        }
+
+        .sync-indicator.error {
+            background: #f44336;
+        }
+
+        .sync-indicator.offline {
+            background: #9e9e9e;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .auth-section {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            border-radius: 8px;
+            padding: 30px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .auth-section h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+
+        .auth-section p {
+            color: #388e3c;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .auth-btn {
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.3s ease;
+        }
+
+        .auth-btn:hover {
+            background: #3367d6;
+        }
+
+        .auth-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .google-icon {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4285f4;
+            font-weight: bold;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .user-details {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: #666;
+            margin-left: 5px;
+        }
+
+        .logout-btn {
+            background: #f44336;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .logout-btn:hover {
+            background: #d32f2f;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        .controls {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .search-box {
+            margin-bottom: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            border: 1px solid #ddd;
+        }
+
+        .control-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .control-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .control-btn.sync {
+            background: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+
+        .control-btn.sync:hover {
+            background: #45a049;
+        }
+
+        .area-section {
+            margin: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 2px solid transparent;
+        }
+
+        .area-section.drag-over {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .area-header {
+            padding: 15px;
+            font-weight: bold;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: move;
+            position: relative;
+        }
+
+        .area-header::before {
+            content: '⋮⋮';
+            position: absolute;
+            left: 5px;
+            opacity: 0.7;
+            font-size: 12px;
+        }
+
+        .bedroom .area-header { background: linear-gradient(135deg, #ff6b6b, #ee5a52); }
+        .kitchen .area-header { background: linear-gradient(135deg, #ffa726, #ff9800); }
+        .living .area-header { background: linear-gradient(135deg, #66bb6a, #4caf50); }
+        .bathroom .area-header { background: linear-gradient(135deg, #42a5f5, #1e88e5); }
+        .office .area-header { background: linear-gradient(135deg, #ab47bc, #8e24aa); }
+        .storage .area-header { background: linear-gradient(135deg, #26c6da, #00acc1); }
+        .cleaning .area-header { background: linear-gradient(135deg, #ffca28, #ffc107); }
+        .entrance .area-header { background: linear-gradient(135deg, #8d6e63, #6d4c41); }
+        .electrical .area-header { background: linear-gradient(135deg, #78909c, #546e7a); }
+
+        .area-count {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .area-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .area-action-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .area-action-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .item-list {
+            background: white;
+            min-height: 50px;
+        }
+
+        .item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: all 0.2s ease;
+            cursor: move;
+            position: relative;
+        }
+
+        .item::before {
+            content: '⋮⋮';
+            position: absolute;
+            left: 5px;
+            opacity: 0.3;
+            font-size: 10px;
+        }
+
+        .item:last-child {
+            border-bottom: none;
+        }
+
+        .item.completed {
+            background-color: #f8f9fa;
+            opacity: 0.7;
+        }
+
+        .item.completed .item-name {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .item.drag-over {
+            border-top: 3px solid #667eea;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 15px;
+            margin-left: 15px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .item-content {
+            flex: 1;
+        }
+
+        .item-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .item-details {
+            display: flex;
+            gap: 10px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .price-tag {
+            background: #d4edda;
+            color: #155724;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .item:hover .item-actions {
+            opacity: 1;
+        }
+
+        .item-action-btn {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .item-action-btn:hover {
+            background: #e9ecef;
+        }
+
+        .floating-summary {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .floating-summary:hover {
+            transform: scale(1.05);
+        }
+
+        .summary-text {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: #f8f9fa;
+            color: #666;
+            border: 1px solid #ddd;
+        }
+
+        .empty-area {
+            padding: 30px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }
+
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .save-indicator.show {
+            opacity: 1;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .github-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .github-info a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .github-info a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .stat-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .control-buttons {
+                justify-content: center;
+            }
+
+            .item-details {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .user-info {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>搬家购物清单</h1>
+            <p>GitHub Pages + Google Drive云端同步 · 永久免费 · 多设备访问</p>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="sync-status">
+                <div class="sync-indicator" id="syncIndicator"></div>
+                <span id="syncStatus">正在初始化...</span>
+            </div>
+        </div>
+
+        <!-- GitHub信息 -->
+        <div class="github-info">
+            🚀 托管在GitHub Pages上，永久免费使用 | 
+            <a href="https://github.com/mavis94/shopping-list" target="_blank">查看源代码</a>
+        </div>
+
+        <!-- Google登录区域 -->
+        <div class="auth-section" id="authSection">
+            <h3>🔐 Google账号登录</h3>
+            <p>使用您的Google账号登录，购物清单将自动保存到您的Google Drive中，<br>
+            在任何设备上登录相同账号即可同步数据。</p>
+            <button class="auth-btn" id="signInBtn">
+                <div class="google-icon">G</div>
+                使用Google账号登录
+            </button>
+            <p style="font-size: 12px; color: #666; margin-top: 15px;">
+                安全提示：数据仅保存在您的个人Google Drive中，完全私密
+            </p>
+        </div>
+
+        <!-- 用户信息区域 -->
+        <div class="user-info hidden" id="userInfo">
+            <div class="user-details">
+                <img class="user-avatar" id="userAvatar" src="" alt="用户头像">
+                <div>
+                    <div class="user-name" id="userName"></div>
+                    <div class="user-email" id="userEmail"></div>
+                </div>
+            </div>
+            <button class="logout-btn" id="signOutBtn">退出登录</button>
+        </div>
+
+        <div class="stats hidden" id="statsSection">
+            <div class="stat-item">
+                <div class="stat-number" id="totalItems">45</div>
+                <div class="stat-label">总物品</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="completedItems">0</div>
+                <div class="stat-label">已完成</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="remainingItems">45</div>
+                <div class="stat-label">待购买</div>
+            </div>
+        </div>
+
+        <div class="controls hidden" id="controlsSection">
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="搜索物品..." id="searchInput">
+            </div>
+            <div class="control-buttons">
+                <button class="control-btn active" data-filter="all">全部</button>
+                <button class="control-btn" data-filter="completed">已完成</button>
+                <button class="control-btn" data-filter="pending">待购买</button>
+                <button class="control-btn" id="addItemBtn">+ 添加物品</button>
+                <button class="control-btn" id="addAreaBtn">+ 添加区域</button>
+                <button class="control-btn sync" id="syncBtn">🔄 手动同步</button>
+            </div>
+        </div>
+
+        <div id="shoppingList" class="hidden">
+            <!-- 区域将通过JavaScript动态生成 -->
+        </div>
+
+        <!-- 加载状态 -->
+        <div class="loading hidden" id="loadingSection">
+            <div class="loading-spinner"></div>
+            <p>正在从Google Drive加载数据...</p>
+        </div>
+    </div>
+
+    <div class="floating-summary hidden" id="floatingSummary">
+        <div class="summary-text" id="summaryText">0/45</div>
+    </div>
+
+    <div class="save-indicator" id="saveIndicator">
+        已保存到Google Drive
+    </div>
+
+    <!-- 添加/编辑物品模态框 -->
+    <div class="modal" id="itemModal">
+        <div class="modal-content">
+            <div class="modal-header" id="itemModalTitle">添加物品</div>
+            <input type="text" class="modal-input" id="itemNameInput" placeholder="物品名称">
+            <input type="text" class="modal-input" id="itemPriceInput" placeholder="预估价格（如：50-150元）">
+            <select class="modal-input" id="itemAreaSelect">
+                <!-- 区域选项将动态生成 -->
+            </select>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" id="cancelItemBtn">取消</button>
+                <button class="modal-btn primary" id="saveItemBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑区域模态框 -->
+    <div class="modal" id="areaModal">
+        <div class="modal-content">
+            <div class="modal-header" id="areaModalTitle">添加区域</div>
+            <input type="text" class="modal-input" id="areaNameInput" placeholder="区域名称">
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" id="cancelAreaBtn">取消</button>
+                <button class="modal-btn primary" id="saveAreaBtn">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client"></script>
+
+    <script>
+        // Google API配置
+        const CLIENT_ID = '577653655566-f5fgi3v90h59q4n6cvm2jjp5d415vu29.apps.googleusercontent.com';
+        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+
+        // 全局变量
+        let gapi;
+        let tokenClient;
+        let isSignedIn = false;
+        let currentUser = null;
+        let shoppingListFileId = null;
+        let lastSyncTime = 0;
+        let syncInterval = null;
+
+        // 初始数据结构
+        let shoppingData = {
+            areas: {
+                bedroom: {
+                    name: '卧室用品',
+                    color: 'bedroom',
+                    items: [
+                        { id: 'item_1', name: '四件套', price: '150-300元', completed: false },
+                        { id: 'item_2', name: '枕头', price: '50-150元', completed: false },
+                        { id: 'item_3', name: '床垫保护垫', price: '80-200元', completed: false },
+                        { id: 'item_4', name: '床头柜', price: '150-500元', completed: false },
+                        { id: 'item_5', name: '床头靠垫', price: '60-150元', completed: false },
+                        { id: 'item_6', name: '衣服挂架', price: '50-120元', completed: false },
+                        { id: 'item_7', name: '衣柜滑轨挂架', price: '80-200元', completed: false },
+                        { id: 'item_8', name: '内衣裤袜子收纳', price: '40-120元', completed: false },
+                        { id: 'item_9', name: '化妆镜', price: '50-200元', completed: false }
+                    ]
+                },
+                kitchen: {
+                    name: '厨房用品',
+                    color: 'kitchen',
+                    items: [
+                        { id: 'item_10', name: '微波炉', price: '300-800元', completed: false },
+                        { id: 'item_11', name: '打蛋器', price: '20-60元', completed: false },
+                        { id: 'item_12', name: '餐具滤干架', price: '40-100元', completed: false },
+                        { id: 'item_13', name: '调料瓶', price: '30-80元', completed: false },
+                        { id: 'item_14', name: '硅胶锅铲', price: '15-40元', completed: false },
+                        { id: 'item_15', name: '食物称', price: '50-150元', completed: false },
+                        { id: 'item_16', name: '餐盘', price: '30-100元', completed: false },
+                        { id: 'item_17', name: '冷泡壶', price: '50-150元', completed: false },
+                        { id: 'item_18', name: '不锈钢盆', price: '25-60元', completed: false },
+                        { id: 'item_19', name: '炒锅', price: '80-200元', completed: false },
+                        { id: 'item_20', name: '杯架', price: '25-60元', completed: false }
+                    ]
+                },
+                living: {
+                    name: '客厅用品',
+                    color: 'living',
+                    items: [
+                        { id: 'item_21', name: '桌子', price: '200-800元', completed: false },
+                        { id: 'item_22', name: '椅子', price: '100-400元', completed: false },
+                        { id: 'item_23', name: '沙发布', price: '100-300元', completed: false },
+                        { id: 'item_24', name: '抱枕', price: '50-150元', completed: false },
+                        { id: 'item_25', name: '沙发头垫', price: '40-100元', completed: false },
+                        { id: 'item_26', name: '地毯', price: '100-500元', completed: false },
+                        { id: 'item_27', name: '随心屏', price: '200-800元', completed: false }
+                    ]
+                },
+                bathroom: {
+                    name: '卫生间用品',
+                    color: 'bathroom',
+                    items: [
+                        { id: 'item_28', name: '洗脸巾', price: '20-50元', completed: false },
+                        { id: 'item_29', name: '湿厕纸', price: '15-30元', completed: false },
+                        { id: 'item_30', name: '马桶圈', price: '25-60元', completed: false },
+                        { id: 'item_31', name: '花洒', price: '100-300元', completed: false },
+                        { id: 'item_32', name: '浴巾架', price: '40-100元', completed: false }
+                    ]
+                },
+                office: {
+                    name: '办公学习用品',
+                    color: 'office',
+                    items: [
+                        { id: 'item_33', name: '延伸桌', price: '150-500元', completed: false },
+                        { id: 'item_34', name: '书桌鼠标垫', price: '20-60元', completed: false },
+                        { id: 'item_35', name: '书桌垫', price: '30-100元', completed: false },
+                        { id: 'item_36', name: '笔记本摇臂支架', price: '100-300元', completed: false }
+                    ]
+                },
+                storage: {
+                    name: '收纳整理用品',
+                    color: 'storage',
+                    items: [
+                        { id: 'item_37', name: '柜门储物篮', price: '40-120元', completed: false },
+                        { id: 'item_38', name: '货柜', price: '100-300元', completed: false },
+                        { id: 'item_39', name: '小推车', price: '80-200元', completed: false }
+                    ]
+                },
+                cleaning: {
+                    name: '清洁用品',
+                    color: 'cleaning',
+                    items: [
+                        { id: 'item_40', name: '吸尘器', price: '200-800元', completed: false },
+                        { id: 'item_41', name: '清洁手套', price: '10-25元', completed: false }
+                    ]
+                },
+                entrance: {
+                    name: '门厅玄关用品',
+                    color: 'entrance',
+                    items: [
+                        { id: 'item_42', name: '门口挂外套', price: '30-80元', completed: false },
+                        { id: 'item_43', name: '门厅小桌', price: '100-400元', completed: false }
+                    ]
+                },
+                electrical: {
+                    name: '电器设备',
+                    color: 'electrical',
+                    items: [
+                        { id: 'item_44', name: '消毒柜', price: '300-1000元', completed: false },
+                        { id: 'item_45', name: '插线板', price: '30-80元', completed: false }
+                    ]
+                }
+            },
+            areaOrder: ['bedroom', 'kitchen', 'living', 'bathroom', 'office', 'storage', 'cleaning', 'entrance', 'electrical']
+        };
+
+        let draggedItem = null;
+        let draggedArea = null;
+        let editingItem = null;
+        let editingArea = null;
+
+        // 初始化Google API
+        async function initializeGapi() {
+            try {
+                updateSyncStatus('正在初始化Google API...', 'syncing');
+                
+                // 等待gapi加载
+                if (!window.gapi) {
+                    throw new Error('Google API未加载');
+                }
+
+                await new Promise((resolve, reject) => {
+                    window.gapi.load('client', {
+                        callback: resolve,
+                        onerror: reject
+                    });
+                });
+
+                await window.gapi.client.init({
+                    discoveryDocs: [DISCOVERY_DOC],
+                });
+
+                // 等待google.accounts加载
+                if (!window.google || !window.google.accounts) {
+                    throw new Error('Google Identity Services未加载');
+                }
+
+                // 初始化Google Identity Services
+                tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: CLIENT_ID,
+                    scope: SCOPES,
+                    callback: handleAuthCallback,
+                });
+
+                console.log('Google API初始化成功');
+                updateSyncStatus('等待登录', 'offline');
+            } catch (error) {
+                console.error('Google API初始化失败:', error);
+                updateSyncStatus('初始化失败: ' + error.message, 'error');
+                
+                // 如果API初始化失败，显示本地模式
+                setTimeout(() => {
+                    updateSyncStatus('本地模式（数据仅保存在当前设备）', 'offline');
+                    showLocalMode();
+                }, 3000);
+            }
+        }
+
+        // 显示本地模式
+        function showLocalMode() {
+            document.getElementById('authSection').innerHTML = `
+                <h3>📱 本地模式</h3>
+                <p>Google API暂时无法使用，您可以在本地模式下使用购物清单。<br>
+                数据将保存在当前浏览器中，不会同步到其他设备。</p>
+                <button class="auth-btn" onclick="startLocalMode()">
+                    <div class="google-icon">📱</div>
+                    开始使用本地模式
+                </button>
+                <p style="font-size: 12px; color: #666; margin-top: 15px;">
+                    提示：刷新页面可重新尝试连接Google API
+                </p>
+            `;
+        }
+
+        // 开始本地模式
+        function startLocalMode() {
+            // 隐藏登录界面，显示主界面
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('statsSection').classList.remove('hidden');
+            document.getElementById('controlsSection').classList.remove('hidden');
+            document.getElementById('shoppingList').classList.remove('hidden');
+            document.getElementById('floatingSummary').classList.remove('hidden');
+            
+            // 从本地存储加载数据
+            loadFromLocalStorage();
+            renderShoppingList();
+            updateSyncStatus('本地模式');
+        }
+
+        // 处理认证回调
+        function handleAuthCallback(resp) {
+            if (resp.error !== undefined) {
+                console.error('认证失败:', resp.error);
+                updateSyncStatus('登录失败', 'error');
+                return;
+            }
+
+            isSignedIn = true;
+            updateSyncStatus('登录成功', 'syncing');
+            
+            // 获取用户信息
+            getUserInfo().then(() => {
+                // 隐藏登录界面，显示主界面
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('userInfo').classList.remove('hidden');
+                document.getElementById('statsSection').classList.remove('hidden');
+                document.getElementById('controlsSection').classList.remove('hidden');
+                document.getElementById('shoppingList').classList.remove('hidden');
+                document.getElementById('floatingSummary').classList.remove('hidden');
+                
+                // 加载数据
+                loadFromGoogleDrive().then(() => {
+                    renderShoppingList();
+                    startAutoSync();
+                    updateSyncStatus('已连接Google Drive');
+                });
+            });
+        }
+
+        // 获取用户信息
+        async function getUserInfo() {
+            try {
+                const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                    headers: {
+                        'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+                    }
+                });
+                
+                const userInfo = await response.json();
+                currentUser = userInfo;
+                
+                document.getElementById('userName').textContent = userInfo.name;
+                document.getElementById('userEmail').textContent = userInfo.email;
+                document.getElementById('userAvatar').src = userInfo.picture;
+                
+                console.log('用户信息获取成功:', userInfo);
+            } catch (error) {
+                console.error('获取用户信息失败:', error);
+            }
+        }
+
+        // 登录
+        function signIn() {
+            console.log('尝试登录...');
+            
+            if (!tokenClient) {
+                console.error('Google API未初始化，尝试重新初始化...');
+                updateSyncStatus('正在初始化...', 'syncing');
+                initializeGapi().then(() => {
+                    if (tokenClient) {
+                        signIn();
+                    } else {
+                        updateSyncStatus('初始化失败，请刷新页面重试', 'error');
+                    }
+                });
+                return;
+            }
+            
+            updateSyncStatus('正在登录...', 'syncing');
+            try {
+                tokenClient.requestAccessToken();
+            } catch (error) {
+                console.error('登录失败:', error);
+                updateSyncStatus('登录失败: ' + error.message, 'error');
+            }
+        }
+
+        // 登出
+        function signOut() {
+            if (gapi.client.getToken()) {
+                google.accounts.oauth2.revoke(gapi.client.getToken().access_token);
+                gapi.client.setToken('');
+            }
+            
+            isSignedIn = false;
+            currentUser = null;
+            shoppingListFileId = null;
+            stopAutoSync();
+            
+            // 显示登录界面，隐藏主界面
+            document.getElementById('authSection').classList.remove('hidden');
+            document.getElementById('userInfo').classList.add('hidden');
+            document.getElementById('statsSection').classList.add('hidden');
+            document.getElementById('controlsSection').classList.add('hidden');
+            document.getElementById('shoppingList').classList.add('hidden');
+            document.getElementById('floatingSummary').classList.add('hidden');
+            
+            updateSyncStatus('已退出登录', 'offline');
+        }
+
+        // 保存到Google Drive
+        async function saveToGoogleDrive() {
+            if (!isSignedIn) {
+                console.log('未登录，保存到本地存储');
+                saveToLocalStorage();
+                return false;
+            }
+
+            try {
+                updateSyncStatus('正在同步...', 'syncing');
+                
+                const dataToSave = {
+                    timestamp: Date.now(),
+                    data: shoppingData
+                };
+
+                const fileContent = JSON.stringify(dataToSave, null, 2);
+                
+                if (shoppingListFileId) {
+                    // 更新现有文件
+                    const response = await gapi.client.request({
+                        path: `https://www.googleapis.com/upload/drive/v3/files/${shoppingListFileId}`,
+                        method: 'PATCH',
+                        params: {
+                            uploadType: 'media'
+                        },
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: fileContent
+                    });
+                    
+                    console.log('文件更新成功:', response);
+                } else {
+                    // 创建新文件
+                    const metadata = {
+                        name: 'shopping-list.json',
+                        parents: ['appDataFolder'] // 使用应用数据文件夹，用户不可见
+                    };
+
+                    const form = new FormData();
+                    form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+                    form.append('file', new Blob([fileContent], {type: 'application/json'}));
+
+                    const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${gapi.client.getToken().access_token}`
+                        },
+                        body: form
+                    });
+
+                    const result = await response.json();
+                    shoppingListFileId = result.id;
+                    console.log('文件创建成功:', result);
+                }
+
+                lastSyncTime = Date.now();
+                updateSyncStatus('已同步到Google Drive');
+                showSaveIndicator();
+                return true;
+            } catch (error) {
+                console.error('保存到Google Drive失败:', error);
+                updateSyncStatus('同步失败', 'error');
+                // 备份到本地存储
+                saveToLocalStorage();
+                return false;
+            }
+        }
+
+        // 从Google Drive加载
+        async function loadFromGoogleDrive() {
+            if (!isSignedIn) {
+                console.log('未登录，从本地存储加载');
+                loadFromLocalStorage();
+                return false;
+            }
+
+            try {
+                updateSyncStatus('正在加载...', 'syncing');
+                
+                // 搜索购物清单文件
+                const response = await gapi.client.drive.files.list({
+                    q: "name='shopping-list.json' and parents in 'appDataFolder'",
+                    spaces: 'appDataFolder'
+                });
+
+                const files = response.result.files;
+                if (files && files.length > 0) {
+                    shoppingListFileId = files[0].id;
+                    
+                    // 下载文件内容
+                    const fileResponse = await gapi.client.drive.files.get({
+                        fileId: shoppingListFileId,
+                        alt: 'media'
+                    });
+
+                    const fileContent = JSON.parse(fileResponse.body);
+                    if (fileContent.data) {
+                        shoppingData = fileContent.data;
+                        lastSyncTime = fileContent.timestamp || Date.now();
+                        updateSyncStatus('已从Google Drive加载');
+                        console.log('数据加载成功');
+                        return true;
+                    }
+                }
+                
+                // 如果没有找到文件，使用默认数据
+                updateSyncStatus('使用默认数据');
+                console.log('未找到现有文件，使用默认数据');
+                return false;
+            } catch (error) {
+                console.error('从Google Drive加载失败:', error);
+                updateSyncStatus('加载失败', 'error');
+                // 尝试从本地存储加载
+                loadFromLocalStorage();
+                return false;
+            }
+        }
+
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('shoppingListData', JSON.stringify(shoppingData));
+                showSaveIndicator();
+            } catch (error) {
+                console.error('保存到本地存储失败:', error);
+            }
+        }
+
+        // 从本地存储加载
+        function loadFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('shoppingListData');
+                if (savedData) {
+                    shoppingData = JSON.parse(savedData);
+                    console.log('从本地存储加载数据成功');
+                }
+            } catch (error) {
+                console.error('从本地存储加载失败:', error);
+            }
+        }
+
+        // 自动同步
+        function startAutoSync() {
+            if (!isSignedIn) return;
+            
+            // 每60秒自动同步一次
+            syncInterval = setInterval(async () => {
+                await saveToGoogleDrive();
+            }, 60000);
+        }
+
+        function stopAutoSync() {
+            if (syncInterval) {
+                clearInterval(syncInterval);
+                syncInterval = null;
+            }
+        }
+
+        // 手动同步
+        async function manualSync() {
+            if (isSignedIn) {
+                await saveToGoogleDrive();
+            } else {
+                saveToLocalStorage();
+                showSaveIndicator();
+            }
+        }
+
+        // 更新同步状态
+        function updateSyncStatus(message, status = 'success') {
+            const indicator = document.getElementById('syncIndicator');
+            const statusText = document.getElementById('syncStatus');
+            
+            statusText.textContent = message;
+            
+            indicator.className = 'sync-indicator';
+            if (status === 'syncing') {
+                indicator.classList.add('syncing');
+            } else if (status === 'error') {
+                indicator.classList.add('error');
+            } else if (status === 'offline') {
+                indicator.classList.add('offline');
+            }
+        }
+
+        // 显示保存指示器
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        // 保存数据
+        async function saveData() {
+            if (isSignedIn) {
+                await saveToGoogleDrive();
+            } else {
+                saveToLocalStorage();
+            }
+        }
+
+        // 生成唯一ID
+        function generateId() {
+            return 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
+        // 渲染购物清单
+        function renderShoppingList() {
+            const container = document.getElementById('shoppingList');
+            container.innerHTML = '';
+
+            shoppingData.areaOrder.forEach(areaId => {
+                const area = shoppingData.areas[areaId];
+                if (!area) return;
+
+                const areaElement = createAreaElement(areaId, area);
+                container.appendChild(areaElement);
+            });
+
+            updateStats();
+        }
+
+        // 创建区域元素
+        function createAreaElement(areaId, area) {
+            const areaDiv = document.createElement('div');
+            areaDiv.className = `area-section ${area.color}`;
+            areaDiv.dataset.areaId = areaId;
+            areaDiv.draggable = true;
+
+            const completedCount = area.items.filter(item => item.completed).length;
+            const totalCount = area.items.length;
+
+            areaDiv.innerHTML = `
+                <div class="area-header">
+                    <span>${area.name}</span>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="area-count">${completedCount}/${totalCount}</span>
+                        <div class="area-actions">
+                            <button class="area-action-btn" onclick="editArea('${areaId}')">编辑</button>
+                            <button class="area-action-btn" onclick="deleteArea('${areaId}')">删除</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="item-list" data-area-id="${areaId}">
+                    ${area.items.length === 0 ? '<div class="empty-area">暂无物品，点击"+ 添加物品"来添加</div>' : ''}
+                </div>
+            `;
+
+            // 添加区域拖拽事件
+            areaDiv.addEventListener('dragstart', (e) => {
+                draggedArea = areaId;
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            areaDiv.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                areaDiv.classList.add('drag-over');
+            });
+
+            areaDiv.addEventListener('dragleave', () => {
+                areaDiv.classList.remove('drag-over');
+            });
+
+            areaDiv.addEventListener('drop', (e) => {
+                e.preventDefault();
+                areaDiv.classList.remove('drag-over');
+                
+                if (draggedArea && draggedArea !== areaId) {
+                    moveArea(draggedArea, areaId);
+                }
+            });
+
+            // 渲染物品
+            const itemList = areaDiv.querySelector('.item-list');
+            area.items.forEach(item => {
+                const itemElement = createItemElement(item, areaId);
+                itemList.appendChild(itemElement);
+            });
+
+            return areaDiv;
+        }
+
+        // 创建物品元素
+        function createItemElement(item, areaId) {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = `item ${item.completed ? 'completed' : ''}`;
+            itemDiv.dataset.itemId = item.id;
+            itemDiv.dataset.areaId = areaId;
+            itemDiv.draggable = true;
+
+            itemDiv.innerHTML = `
+                <input type="checkbox" class="checkbox" ${item.completed ? 'checked' : ''}>
+                <div class="item-content">
+                    <div class="item-name">${item.name}</div>
+                    <div class="item-details">
+                        <span class="price-tag">${item.price}</span>
+                    </div>
+                </div>
+                <div class="item-actions">
+                    <button class="item-action-btn" onclick="editItem('${item.id}', '${areaId}')">编辑</button>
+                    <button class="item-action-btn" onclick="deleteItem('${item.id}', '${areaId}')">删除</button>
+                </div>
+            `;
+
+            // 复选框事件
+            const checkbox = itemDiv.querySelector('.checkbox');
+            checkbox.addEventListener('change', () => {
+                item.completed = checkbox.checked;
+                itemDiv.classList.toggle('completed', item.completed);
+                updateStats();
+                saveData();
+            });
+
+            // 物品拖拽事件
+            itemDiv.addEventListener('dragstart', (e) => {
+                draggedItem = { id: item.id, areaId: areaId };
+                itemDiv.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+
+            itemDiv.addEventListener('dragend', () => {
+                itemDiv.classList.remove('dragging');
+                draggedItem = null;
+            });
+
+            itemDiv.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'move';
+                itemDiv.classList.add('drag-over');
+            });
+
+            itemDiv.addEventListener('dragleave', () => {
+                itemDiv.classList.remove('drag-over');
+            });
+
+            itemDiv.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                itemDiv.classList.remove('drag-over');
+                
+                if (draggedItem && draggedItem.id !== item.id) {
+                    moveItem(draggedItem, item.id, areaId);
+                }
+            });
+
+            return itemDiv;
+        }
+
+        // 移动物品
+        function moveItem(draggedItem, targetItemId, targetAreaId) {
+            const sourceArea = shoppingData.areas[draggedItem.areaId];
+            const targetArea = shoppingData.areas[targetAreaId];
+            
+            // 找到被拖拽的物品
+            const itemIndex = sourceArea.items.findIndex(item => item.id === draggedItem.id);
+            if (itemIndex === -1) return;
+            
+            const item = sourceArea.items.splice(itemIndex, 1)[0];
+            
+            // 找到目标位置
+            const targetIndex = targetArea.items.findIndex(item => item.id === targetItemId);
+            
+            if (targetIndex === -1) {
+                targetArea.items.push(item);
+            } else {
+                targetArea.items.splice(targetIndex, 0, item);
+            }
+            
+            saveData();
+            renderShoppingList();
+        }
+
+        // 移动区域
+        function moveArea(draggedAreaId, targetAreaId) {
+            const draggedIndex = shoppingData.areaOrder.indexOf(draggedAreaId);
+            const targetIndex = shoppingData.areaOrder.indexOf(targetAreaId);
+            
+            if (draggedIndex === -1 || targetIndex === -1) return;
+            
+            shoppingData.areaOrder.splice(draggedIndex, 1);
+            shoppingData.areaOrder.splice(targetIndex, 0, draggedAreaId);
+            
+            saveData();
+            renderShoppingList();
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            let totalItems = 0;
+            let completedItems = 0;
+
+            Object.values(shoppingData.areas).forEach(area => {
+                totalItems += area.items.length;
+                completedItems += area.items.filter(item => item.completed).length;
+            });
+
+            const remaining = totalItems - completedItems;
+            const progress = totalItems > 0 ? (completedItems / totalItems) * 100 : 0;
+
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('completedItems').textContent = completedItems;
+            document.getElementById('remainingItems').textContent = remaining;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('summaryText').textContent = `${completedItems}/${totalItems}`;
+        }
+
+        // 搜索功能
+        function setupSearch() {
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const items = document.querySelectorAll('.item');
+                
+                items.forEach(item => {
+                    const itemName = item.querySelector('.item-name').textContent.toLowerCase();
+                    
+                    if (itemName.includes(searchTerm)) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        // 筛选功能
+        function setupFilters() {
+            const filterButtons = document.querySelectorAll('.control-btn[data-filter]');
+            
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // 更新按钮状态
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const filter = this.dataset.filter;
+                    const items = document.querySelectorAll('.item');
+                    
+                    // 重置搜索
+                    document.getElementById('searchInput').value = '';
+                    
+                    items.forEach(item => {
+                        const isCompleted = item.classList.contains('completed');
+                        
+                        if (filter === 'all') {
+                            item.style.display = 'flex';
+                        } else if (filter === 'completed' && isCompleted) {
+                            item.style.display = 'flex';
+                        } else if (filter === 'pending' && !isCompleted) {
+                            item.style.display = 'flex';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
+        }
+
+        // 模态框功能
+        function setupModals() {
+            // 添加物品
+            document.getElementById('addItemBtn').addEventListener('click', () => {
+                editingItem = null;
+                showItemModal('添加物品');
+            });
+
+            // 添加区域
+            document.getElementById('addAreaBtn').addEventListener('click', () => {
+                editingArea = null;
+                showAreaModal('添加区域');
+            });
+
+            // 手动同步
+            document.getElementById('syncBtn').addEventListener('click', manualSync);
+
+            // 登录/登出
+            document.getElementById('signInBtn').addEventListener('click', signIn);
+            document.getElementById('signOutBtn').addEventListener('click', signOut);
+
+            // 物品模态框事件
+            document.getElementById('saveItemBtn').addEventListener('click', saveItem);
+            document.getElementById('cancelItemBtn').addEventListener('click', hideItemModal);
+
+            // 区域模态框事件
+            document.getElementById('saveAreaBtn').addEventListener('click', saveArea);
+            document.getElementById('cancelAreaBtn').addEventListener('click', hideAreaModal);
+
+            // 点击模态框外部关闭
+            document.getElementById('itemModal').addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    hideItemModal();
+                }
+            });
+
+            document.getElementById('areaModal').addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    hideAreaModal();
+                }
+            });
+        }
+
+        // 显示物品模态框
+        function showItemModal(title) {
+            document.getElementById('itemModalTitle').textContent = title;
+            updateAreaSelect();
+            
+            if (editingItem) {
+                const item = findItem(editingItem.id, editingItem.areaId);
+                if (item) {
+                    document.getElementById('itemNameInput').value = item.name;
+                    document.getElementById('itemPriceInput').value = item.price;
+                    document.getElementById('itemAreaSelect').value = editingItem.areaId;
+                }
+            } else {
+                document.getElementById('itemNameInput').value = '';
+                document.getElementById('itemPriceInput').value = '';
+                document.getElementById('itemAreaSelect').value = Object.keys(shoppingData.areas)[0];
+            }
+            
+            document.getElementById('itemModal').style.display = 'block';
+        }
+
+        // 隐藏物品模态框
+        function hideItemModal() {
+            document.getElementById('itemModal').style.display = 'none';
+            editingItem = null;
+        }
+
+        // 显示区域模态框
+        function showAreaModal(title) {
+            document.getElementById('areaModalTitle').textContent = title;
+            
+            if (editingArea) {
+                const area = shoppingData.areas[editingArea];
+                if (area) {
+                    document.getElementById('areaNameInput').value = area.name;
+                }
+            } else {
+                document.getElementById('areaNameInput').value = '';
+            }
+            
+            document.getElementById('areaModal').style.display = 'block';
+        }
+
+        // 隐藏区域模态框
+        function hideAreaModal() {
+            document.getElementById('areaModal').style.display = 'none';
+            editingArea = null;
+        }
+
+        // 更新区域选择器
+        function updateAreaSelect() {
+            const select = document.getElementById('itemAreaSelect');
+            select.innerHTML = '';
+            
+            Object.entries(shoppingData.areas).forEach(([areaId, area]) => {
+                const option = document.createElement('option');
+                option.value = areaId;
+                option.textContent = area.name;
+                select.appendChild(option);
+            });
+        }
+
+        // 保存物品
+        function saveItem() {
+            const name = document.getElementById('itemNameInput').value.trim();
+            const price = document.getElementById('itemPriceInput').value.trim();
+            const areaId = document.getElementById('itemAreaSelect').value;
+            
+            if (!name) {
+                alert('请输入物品名称');
+                return;
+            }
+            
+            if (editingItem) {
+                // 编辑现有物品
+                const oldAreaId = editingItem.areaId;
+                const item = findItem(editingItem.id, oldAreaId);
+                
+                if (item) {
+                    item.name = name;
+                    item.price = price || '价格待定';
+                    
+                    // 如果区域改变了，移动物品
+                    if (oldAreaId !== areaId) {
+                        const oldArea = shoppingData.areas[oldAreaId];
+                        const newArea = shoppingData.areas[areaId];
+                        const itemIndex = oldArea.items.findIndex(i => i.id === item.id);
+                        
+                        if (itemIndex !== -1) {
+                            oldArea.items.splice(itemIndex, 1);
+                            newArea.items.push(item);
+                        }
+                    }
+                }
+            } else {
+                // 添加新物品
+                const newItem = {
+                    id: generateId(),
+                    name: name,
+                    price: price || '价格待定',
+                    completed: false
+                };
+                
+                shoppingData.areas[areaId].items.push(newItem);
+            }
+            
+            saveData();
+            renderShoppingList();
+            hideItemModal();
+        }
+
+        // 保存区域
+        function saveArea() {
+            const name = document.getElementById('areaNameInput').value.trim();
+            
+            if (!name) {
+                alert('请输入区域名称');
+                return;
+            }
+            
+            if (editingArea) {
+                // 编辑现有区域
+                const area = shoppingData.areas[editingArea];
+                if (area) {
+                    area.name = name;
+                }
+            } else {
+                // 添加新区域
+                const areaId = 'area_' + Date.now();
+                shoppingData.areas[areaId] = {
+                    name: name,
+                    color: 'electrical', // 默认颜色
+                    items: []
+                };
+                shoppingData.areaOrder.push(areaId);
+            }
+            
+            saveData();
+            renderShoppingList();
+            hideAreaModal();
+        }
+
+        // 编辑物品
+        function editItem(itemId, areaId) {
+            editingItem = { id: itemId, areaId: areaId };
+            showItemModal('编辑物品');
+        }
+
+        // 删除物品
+        function deleteItem(itemId, areaId) {
+            if (confirm('确定要删除这个物品吗？')) {
+                const area = shoppingData.areas[areaId];
+                const itemIndex = area.items.findIndex(item => item.id === itemId);
+                
+                if (itemIndex !== -1) {
+                    area.items.splice(itemIndex, 1);
+                    saveData();
+                    renderShoppingList();
+                }
+            }
+        }
+
+        // 编辑区域
+        function editArea(areaId) {
+            editingArea = areaId;
+            showAreaModal('编辑区域');
+        }
+
+        // 删除区域
+        function deleteArea(areaId) {
+            const area = shoppingData.areas[areaId];
+            if (area.items.length > 0) {
+                if (!confirm('该区域还有物品，确定要删除吗？所有物品也会被删除。')) {
+                    return;
+                }
+            } else {
+                if (!confirm('确定要删除这个区域吗？')) {
+                    return;
+                }
+            }
+            
+            delete shoppingData.areas[areaId];
+            const orderIndex = shoppingData.areaOrder.indexOf(areaId);
+            if (orderIndex !== -1) {
+                shoppingData.areaOrder.splice(orderIndex, 1);
+            }
+            
+            saveData();
+            renderShoppingList();
+        }
+
+        // 查找物品
+        function findItem(itemId, areaId) {
+            const area = shoppingData.areas[areaId];
+            return area ? area.items.find(item => item.id === itemId) : null;
+        }
+
+        // 浮动摘要点击事件
+        function setupFloatingSummary() {
+            document.getElementById('floatingSummary').addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // 初始化
+        function init() {
+            setupSearch();
+            setupFilters();
+            setupModals();
+            setupFloatingSummary();
+            
+            // 延迟初始化Google API，确保所有脚本都已加载
+            setTimeout(() => {
+                initializeGapi();
+            }, 1000);
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 确保Google API脚本加载完成后再初始化
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (!tokenClient && !isSignedIn) {
+                    console.log('页面加载完成，重新尝试初始化Google API');
+                    initializeGapi();
+                }
+            }, 2000);
+        });
+
+        // 页面卸载时停止自动同步
+        window.addEventListener('beforeunload', () => {
+            stopAutoSync();
+        });
+    </script>
+</body>
+</html>
+
