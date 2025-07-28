@@ -717,7 +717,8 @@
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">导入数据</div>
             <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
-                请粘贴之前导出的JSON数据，或上传导出的文件：
+                请粘贴之前导出的JSON数据，或上传导出的文件。<br>
+                支持两种格式：完整导出格式和纯数据格式。
             </p>
             <textarea class="modal-input" id="importDataInput" placeholder="粘贴JSON数据..." style="height: 200px; resize: vertical;"></textarea>
             <div style="margin: 15px 0; text-align: center; color: #666;">或</div>
@@ -1200,9 +1201,28 @@
             try {
                 const importData = JSON.parse(importText);
                 
-                // 验证数据格式
-                if (!importData.data || !importData.data.areas || !importData.data.areaOrder) {
-                    throw new Error('数据格式不正确');
+                let dataToImport;
+                
+                // 检测数据格式
+                if (importData.data && importData.data.areas && importData.data.areaOrder) {
+                    // 完整导出格式（包含版本、时间戳等）
+                    dataToImport = importData.data;
+                    console.log('检测到完整导出格式');
+                } else if (importData.areas && importData.areaOrder) {
+                    // 纯数据格式（直接是购物清单数据）
+                    dataToImport = importData;
+                    console.log('检测到纯数据格式');
+                } else {
+                    throw new Error('数据格式不正确：缺少必要的areas或areaOrder字段');
+                }
+
+                // 验证数据结构
+                if (!dataToImport.areas || typeof dataToImport.areas !== 'object') {
+                    throw new Error('数据格式不正确：areas字段无效');
+                }
+                
+                if (!Array.isArray(dataToImport.areaOrder)) {
+                    throw new Error('数据格式不正确：areaOrder字段无效');
                 }
 
                 // 确认导入
@@ -1211,7 +1231,7 @@
                 }
 
                 // 导入数据
-                shoppingData = importData.data;
+                shoppingData = dataToImport;
                 
                 // 保存数据
                 saveData();
@@ -1223,11 +1243,11 @@
                 hideImportModal();
                 
                 alert('数据导入成功！');
-                console.log('数据导入成功');
+                console.log('数据导入成功，导入了', Object.keys(dataToImport.areas).length, '个区域');
                 
             } catch (error) {
                 console.error('导入数据失败:', error);
-                alert('导入数据失败，请检查数据格式是否正确');
+                alert('导入数据失败：' + error.message + '\n\n请检查数据格式是否正确。支持的格式：\n1. 完整导出格式（包含version、timestamp等）\n2. 纯数据格式（直接包含areas和areaOrder）');
             }
         }
 
