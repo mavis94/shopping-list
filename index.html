@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>搬家购物清单 - Google Drive云端同步</title>
+    <title>搬家购物清单 - Firebase云端同步</title>
     <style>
         * {
             margin: 0;
@@ -94,107 +94,67 @@
             100% { opacity: 1; }
         }
 
-        .auth-section {
-            background: #e8f5e8;
-            border: 1px solid #4caf50;
+        .sync-setup {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
             border-radius: 8px;
             padding: 30px;
             margin: 20px;
             text-align: center;
         }
 
-        .auth-section h3 {
-            color: #2e7d32;
+        .sync-setup h3 {
+            color: #1976d2;
             margin-bottom: 15px;
             font-size: 20px;
         }
 
-        .auth-section p {
-            color: #388e3c;
+        .sync-setup p {
+            color: #1565c0;
             margin-bottom: 20px;
             line-height: 1.6;
         }
 
-        .auth-btn {
-            background: #4285f4;
+        .sync-input {
+            width: 100%;
+            max-width: 300px;
+            padding: 12px;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .sync-btn {
+            background: #2196f3;
             color: white;
             border: none;
             padding: 15px 30px;
             border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
             transition: background 0.3s ease;
+            margin: 0 10px;
         }
 
-        .auth-btn:hover {
-            background: #3367d6;
+        .sync-btn:hover {
+            background: #1976d2;
         }
 
-        .auth-btn:disabled {
+        .sync-btn:disabled {
             background: #ccc;
             cursor: not-allowed;
         }
 
-        .google-icon {
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #4285f4;
-            font-weight: bold;
-        }
-
-        .user-info {
+        .sync-btn.secondary {
             background: #f8f9fa;
-            padding: 15px 20px;
-            border-bottom: 1px solid #e9ecef;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .user-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-
-        .user-details {
-            display: flex;
-            align-items: center;
-            flex: 1;
-        }
-
-        .user-name {
-            font-weight: 500;
-            color: #333;
-        }
-
-        .user-email {
-            font-size: 12px;
             color: #666;
-            margin-left: 5px;
+            border: 1px solid #ddd;
         }
 
-        .logout-btn {
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        .logout-btn:hover {
-            background: #d32f2f;
+        .sync-btn.secondary:hover {
+            background: #e9ecef;
         }
 
         .stats {
@@ -587,7 +547,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        .github-info {
+        .firebase-info {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
             border-radius: 8px;
@@ -598,12 +558,12 @@
             text-align: center;
         }
 
-        .github-info a {
+        .firebase-info a {
             color: #667eea;
             text-decoration: none;
         }
 
-        .github-info a:hover {
+        .firebase-info a:hover {
             text-decoration: underline;
         }
 
@@ -628,10 +588,13 @@
                 gap: 4px;
             }
 
-            .user-info {
-                flex-direction: column;
-                gap: 10px;
-                text-align: center;
+            .sync-setup {
+                margin: 10px;
+                padding: 20px;
+            }
+
+            .sync-input {
+                max-width: 100%;
             }
         }
     </style>
@@ -640,7 +603,7 @@
     <div class="container">
         <div class="header">
             <h1>搬家购物清单</h1>
-            <p>GitHub Pages + Google Drive云端同步 · 永久免费 · 多设备访问</p>
+            <p>Firebase云端同步 · 永久免费 · 多设备访问 · 无需登录</p>
             <div class="progress-bar">
                 <div class="progress-fill" id="progressFill"></div>
             </div>
@@ -650,36 +613,24 @@
             </div>
         </div>
 
-        <!-- GitHub信息 -->
-        <div class="github-info">
-            🚀 托管在GitHub Pages上，永久免费使用 | 
+        <!-- Firebase信息 -->
+        <div class="firebase-info">
+            🔥 使用Firebase云端存储，数据安全可靠 | 
             <a href="https://github.com/mavis94/shopping-list" target="_blank">查看源代码</a>
         </div>
 
-        <!-- Google登录区域 -->
-        <div class="auth-section" id="authSection">
-            <h3>🔐 Google账号登录</h3>
-            <p>使用您的Google账号登录，购物清单将自动保存到您的Google Drive中，<br>
-            在任何设备上登录相同账号即可同步数据。</p>
-            <button class="auth-btn" id="signInBtn">
-                <div class="google-icon">G</div>
-                使用Google账号登录
-            </button>
+        <!-- 同步设置区域 -->
+        <div class="sync-setup" id="syncSetup">
+            <h3>☁️ 云端同步设置</h3>
+            <p>设置一个专属的同步ID，您的购物清单将自动保存到云端。<br>
+            在任何设备上输入相同的同步ID即可同步数据。</p>
+            <input type="text" class="sync-input" id="syncIdInput" placeholder="输入您的专属同步ID（如：张三2024）" maxlength="50">
+            <br>
+            <button class="sync-btn" id="startSyncBtn">开始云端同步</button>
+            <button class="sync-btn secondary" id="localModeBtn">仅本地使用</button>
             <p style="font-size: 12px; color: #666; margin-top: 15px;">
-                安全提示：数据仅保存在您的个人Google Drive中，完全私密
+                💡 建议使用：姓名+生日 或 姓名+手机后4位，方便记忆且不易重复
             </p>
-        </div>
-
-        <!-- 用户信息区域 -->
-        <div class="user-info hidden" id="userInfo">
-            <div class="user-details">
-                <img class="user-avatar" id="userAvatar" src="" alt="用户头像">
-                <div>
-                    <div class="user-name" id="userName"></div>
-                    <div class="user-email" id="userEmail"></div>
-                </div>
-            </div>
-            <button class="logout-btn" id="signOutBtn">退出登录</button>
         </div>
 
         <div class="stats hidden" id="statsSection">
@@ -708,6 +659,7 @@
                 <button class="control-btn" id="addItemBtn">+ 添加物品</button>
                 <button class="control-btn" id="addAreaBtn">+ 添加区域</button>
                 <button class="control-btn sync" id="syncBtn">🔄 手动同步</button>
+                <button class="control-btn" id="changeSyncBtn">🔧 更换同步ID</button>
             </div>
         </div>
 
@@ -718,7 +670,7 @@
         <!-- 加载状态 -->
         <div class="loading hidden" id="loadingSection">
             <div class="loading-spinner"></div>
-            <p>正在从Google Drive加载数据...</p>
+            <p>正在从云端加载数据...</p>
         </div>
     </div>
 
@@ -727,7 +679,7 @@
     </div>
 
     <div class="save-indicator" id="saveIndicator">
-        已保存到Google Drive
+        已保存到云端
     </div>
 
     <!-- 添加/编辑物品模态框 -->
@@ -758,24 +710,31 @@
         </div>
     </div>
 
-    <!-- Google API -->
-    <script src="https://apis.google.com/js/api.js"></script>
-    <script src="https://accounts.google.com/gsi/client"></script>
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js';
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js';
 
-    <script>
-        // Google API配置
-        const CLIENT_ID = '577653655566-f5fgi3v90h59q4n6cvm2jjp5d415vu29.apps.googleusercontent.com';
-        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
-        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEtIluV1u2eeHl9KneRWbdAMIh5E71h9U",
+            authDomain: "shopping-list-app-1596c.firebaseapp.com",
+            projectId: "shopping-list-app-1596c",
+            storageBucket: "shopping-list-app-1596c.firebasestorage.app",
+            messagingSenderId: "680069672308",
+            appId: "1:680069672308:web:f953e007be281e50e15021"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
 
         // 全局变量
-        let gapi;
-        let tokenClient;
-        let isSignedIn = false;
-        let currentUser = null;
-        let shoppingListFileId = null;
+        let currentSyncId = null;
+        let isCloudMode = false;
+        let unsubscribe = null;
         let lastSyncTime = 0;
-        let syncInterval = null;
 
         // 初始数据结构
         let shoppingData = {
@@ -888,355 +847,6 @@
         let editingItem = null;
         let editingArea = null;
 
-        // 初始化Google API
-        async function initializeGapi() {
-            try {
-                updateSyncStatus('正在初始化Google API...', 'syncing');
-                
-                // 等待gapi加载
-                if (!window.gapi) {
-                    throw new Error('Google API未加载');
-                }
-
-                await new Promise((resolve, reject) => {
-                    window.gapi.load('client', {
-                        callback: resolve,
-                        onerror: reject
-                    });
-                });
-
-                await window.gapi.client.init({
-                    discoveryDocs: [DISCOVERY_DOC],
-                });
-
-                // 等待google.accounts加载
-                if (!window.google || !window.google.accounts) {
-                    throw new Error('Google Identity Services未加载');
-                }
-
-                // 初始化Google Identity Services
-                tokenClient = google.accounts.oauth2.initTokenClient({
-                    client_id: CLIENT_ID,
-                    scope: SCOPES,
-                    callback: handleAuthCallback,
-                });
-
-                console.log('Google API初始化成功');
-                updateSyncStatus('等待登录', 'offline');
-            } catch (error) {
-                console.error('Google API初始化失败:', error);
-                updateSyncStatus('初始化失败: ' + error.message, 'error');
-                
-                // 如果API初始化失败，显示本地模式
-                setTimeout(() => {
-                    updateSyncStatus('本地模式（数据仅保存在当前设备）', 'offline');
-                    showLocalMode();
-                }, 3000);
-            }
-        }
-
-        // 显示本地模式
-        function showLocalMode() {
-            document.getElementById('authSection').innerHTML = `
-                <h3>📱 本地模式</h3>
-                <p>Google API暂时无法使用，您可以在本地模式下使用购物清单。<br>
-                数据将保存在当前浏览器中，不会同步到其他设备。</p>
-                <button class="auth-btn" onclick="startLocalMode()">
-                    <div class="google-icon">📱</div>
-                    开始使用本地模式
-                </button>
-                <p style="font-size: 12px; color: #666; margin-top: 15px;">
-                    提示：刷新页面可重新尝试连接Google API
-                </p>
-            `;
-        }
-
-        // 开始本地模式
-        function startLocalMode() {
-            // 隐藏登录界面，显示主界面
-            document.getElementById('authSection').classList.add('hidden');
-            document.getElementById('statsSection').classList.remove('hidden');
-            document.getElementById('controlsSection').classList.remove('hidden');
-            document.getElementById('shoppingList').classList.remove('hidden');
-            document.getElementById('floatingSummary').classList.remove('hidden');
-            
-            // 从本地存储加载数据
-            loadFromLocalStorage();
-            renderShoppingList();
-            updateSyncStatus('本地模式');
-        }
-
-        // 处理认证回调
-        function handleAuthCallback(resp) {
-            if (resp.error !== undefined) {
-                console.error('认证失败:', resp.error);
-                updateSyncStatus('登录失败', 'error');
-                return;
-            }
-
-            isSignedIn = true;
-            updateSyncStatus('登录成功', 'syncing');
-            
-            // 获取用户信息
-            getUserInfo().then(() => {
-                // 隐藏登录界面，显示主界面
-                document.getElementById('authSection').classList.add('hidden');
-                document.getElementById('userInfo').classList.remove('hidden');
-                document.getElementById('statsSection').classList.remove('hidden');
-                document.getElementById('controlsSection').classList.remove('hidden');
-                document.getElementById('shoppingList').classList.remove('hidden');
-                document.getElementById('floatingSummary').classList.remove('hidden');
-                
-                // 加载数据
-                loadFromGoogleDrive().then(() => {
-                    renderShoppingList();
-                    startAutoSync();
-                    updateSyncStatus('已连接Google Drive');
-                });
-            });
-        }
-
-        // 获取用户信息
-        async function getUserInfo() {
-            try {
-                const response = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-                    headers: {
-                        'Authorization': `Bearer ${gapi.client.getToken().access_token}`
-                    }
-                });
-                
-                const userInfo = await response.json();
-                currentUser = userInfo;
-                
-                document.getElementById('userName').textContent = userInfo.name;
-                document.getElementById('userEmail').textContent = userInfo.email;
-                document.getElementById('userAvatar').src = userInfo.picture;
-                
-                console.log('用户信息获取成功:', userInfo);
-            } catch (error) {
-                console.error('获取用户信息失败:', error);
-            }
-        }
-
-        // 登录
-        function signIn() {
-            console.log('尝试登录...');
-            
-            if (!tokenClient) {
-                console.error('Google API未初始化，尝试重新初始化...');
-                updateSyncStatus('正在初始化...', 'syncing');
-                initializeGapi().then(() => {
-                    if (tokenClient) {
-                        signIn();
-                    } else {
-                        updateSyncStatus('初始化失败，请刷新页面重试', 'error');
-                    }
-                });
-                return;
-            }
-            
-            updateSyncStatus('正在登录...', 'syncing');
-            try {
-                tokenClient.requestAccessToken();
-            } catch (error) {
-                console.error('登录失败:', error);
-                updateSyncStatus('登录失败: ' + error.message, 'error');
-            }
-        }
-
-        // 登出
-        function signOut() {
-            if (gapi.client.getToken()) {
-                google.accounts.oauth2.revoke(gapi.client.getToken().access_token);
-                gapi.client.setToken('');
-            }
-            
-            isSignedIn = false;
-            currentUser = null;
-            shoppingListFileId = null;
-            stopAutoSync();
-            
-            // 显示登录界面，隐藏主界面
-            document.getElementById('authSection').classList.remove('hidden');
-            document.getElementById('userInfo').classList.add('hidden');
-            document.getElementById('statsSection').classList.add('hidden');
-            document.getElementById('controlsSection').classList.add('hidden');
-            document.getElementById('shoppingList').classList.add('hidden');
-            document.getElementById('floatingSummary').classList.add('hidden');
-            
-            updateSyncStatus('已退出登录', 'offline');
-        }
-
-        // 保存到Google Drive
-        async function saveToGoogleDrive() {
-            if (!isSignedIn) {
-                console.log('未登录，保存到本地存储');
-                saveToLocalStorage();
-                return false;
-            }
-
-            try {
-                updateSyncStatus('正在同步...', 'syncing');
-                
-                const dataToSave = {
-                    timestamp: Date.now(),
-                    data: shoppingData
-                };
-
-                const fileContent = JSON.stringify(dataToSave, null, 2);
-                
-                if (shoppingListFileId) {
-                    // 更新现有文件
-                    const response = await gapi.client.request({
-                        path: `https://www.googleapis.com/upload/drive/v3/files/${shoppingListFileId}`,
-                        method: 'PATCH',
-                        params: {
-                            uploadType: 'media'
-                        },
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: fileContent
-                    });
-                    
-                    console.log('文件更新成功:', response);
-                } else {
-                    // 创建新文件
-                    const metadata = {
-                        name: 'shopping-list.json',
-                        parents: ['appDataFolder'] // 使用应用数据文件夹，用户不可见
-                    };
-
-                    const form = new FormData();
-                    form.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
-                    form.append('file', new Blob([fileContent], {type: 'application/json'}));
-
-                    const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${gapi.client.getToken().access_token}`
-                        },
-                        body: form
-                    });
-
-                    const result = await response.json();
-                    shoppingListFileId = result.id;
-                    console.log('文件创建成功:', result);
-                }
-
-                lastSyncTime = Date.now();
-                updateSyncStatus('已同步到Google Drive');
-                showSaveIndicator();
-                return true;
-            } catch (error) {
-                console.error('保存到Google Drive失败:', error);
-                updateSyncStatus('同步失败', 'error');
-                // 备份到本地存储
-                saveToLocalStorage();
-                return false;
-            }
-        }
-
-        // 从Google Drive加载
-        async function loadFromGoogleDrive() {
-            if (!isSignedIn) {
-                console.log('未登录，从本地存储加载');
-                loadFromLocalStorage();
-                return false;
-            }
-
-            try {
-                updateSyncStatus('正在加载...', 'syncing');
-                
-                // 搜索购物清单文件
-                const response = await gapi.client.drive.files.list({
-                    q: "name='shopping-list.json' and parents in 'appDataFolder'",
-                    spaces: 'appDataFolder'
-                });
-
-                const files = response.result.files;
-                if (files && files.length > 0) {
-                    shoppingListFileId = files[0].id;
-                    
-                    // 下载文件内容
-                    const fileResponse = await gapi.client.drive.files.get({
-                        fileId: shoppingListFileId,
-                        alt: 'media'
-                    });
-
-                    const fileContent = JSON.parse(fileResponse.body);
-                    if (fileContent.data) {
-                        shoppingData = fileContent.data;
-                        lastSyncTime = fileContent.timestamp || Date.now();
-                        updateSyncStatus('已从Google Drive加载');
-                        console.log('数据加载成功');
-                        return true;
-                    }
-                }
-                
-                // 如果没有找到文件，使用默认数据
-                updateSyncStatus('使用默认数据');
-                console.log('未找到现有文件，使用默认数据');
-                return false;
-            } catch (error) {
-                console.error('从Google Drive加载失败:', error);
-                updateSyncStatus('加载失败', 'error');
-                // 尝试从本地存储加载
-                loadFromLocalStorage();
-                return false;
-            }
-        }
-
-        // 保存到本地存储
-        function saveToLocalStorage() {
-            try {
-                localStorage.setItem('shoppingListData', JSON.stringify(shoppingData));
-                showSaveIndicator();
-            } catch (error) {
-                console.error('保存到本地存储失败:', error);
-            }
-        }
-
-        // 从本地存储加载
-        function loadFromLocalStorage() {
-            try {
-                const savedData = localStorage.getItem('shoppingListData');
-                if (savedData) {
-                    shoppingData = JSON.parse(savedData);
-                    console.log('从本地存储加载数据成功');
-                }
-            } catch (error) {
-                console.error('从本地存储加载失败:', error);
-            }
-        }
-
-        // 自动同步
-        function startAutoSync() {
-            if (!isSignedIn) return;
-            
-            // 每60秒自动同步一次
-            syncInterval = setInterval(async () => {
-                await saveToGoogleDrive();
-            }, 60000);
-        }
-
-        function stopAutoSync() {
-            if (syncInterval) {
-                clearInterval(syncInterval);
-                syncInterval = null;
-            }
-        }
-
-        // 手动同步
-        async function manualSync() {
-            if (isSignedIn) {
-                await saveToGoogleDrive();
-            } else {
-                saveToLocalStorage();
-                showSaveIndicator();
-            }
-        }
-
         // 更新同步状态
         function updateSyncStatus(message, status = 'success') {
             const indicator = document.getElementById('syncIndicator');
@@ -1263,12 +873,238 @@
             }, 2000);
         }
 
+        // 开始云端同步
+        async function startCloudSync() {
+            const syncId = document.getElementById('syncIdInput').value.trim();
+            
+            if (!syncId) {
+                alert('请输入同步ID');
+                return;
+            }
+
+            if (syncId.length < 3) {
+                alert('同步ID至少需要3个字符');
+                return;
+            }
+
+            currentSyncId = syncId;
+            isCloudMode = true;
+            
+            // 保存同步ID到本地
+            localStorage.setItem('shoppingSyncId', syncId);
+            
+            updateSyncStatus('正在连接云端...', 'syncing');
+            
+            try {
+                // 尝试从云端加载数据
+                await loadFromCloud();
+                
+                // 设置实时监听
+                setupCloudListener();
+                
+                // 隐藏设置界面，显示主界面
+                showMainInterface();
+                
+                updateSyncStatus('已连接云端');
+                console.log('云端同步启动成功');
+            } catch (error) {
+                console.error('云端同步启动失败:', error);
+                updateSyncStatus('连接失败，使用本地模式', 'error');
+                startLocalMode();
+            }
+        }
+
+        // 开始本地模式
+        function startLocalMode() {
+            isCloudMode = false;
+            currentSyncId = null;
+            
+            // 清除保存的同步ID
+            localStorage.removeItem('shoppingSyncId');
+            
+            // 从本地存储加载数据
+            loadFromLocalStorage();
+            
+            // 隐藏设置界面，显示主界面
+            showMainInterface();
+            
+            updateSyncStatus('本地模式', 'offline');
+            console.log('本地模式启动');
+        }
+
+        // 显示主界面
+        function showMainInterface() {
+            document.getElementById('syncSetup').classList.add('hidden');
+            document.getElementById('statsSection').classList.remove('hidden');
+            document.getElementById('controlsSection').classList.remove('hidden');
+            document.getElementById('shoppingList').classList.remove('hidden');
+            document.getElementById('floatingSummary').classList.remove('hidden');
+            
+            renderShoppingList();
+        }
+
+        // 保存到云端
+        async function saveToCloud() {
+            if (!isCloudMode || !currentSyncId) {
+                saveToLocalStorage();
+                return false;
+            }
+
+            try {
+                updateSyncStatus('正在同步...', 'syncing');
+                
+                const dataToSave = {
+                    timestamp: Date.now(),
+                    data: shoppingData,
+                    syncId: currentSyncId
+                };
+
+                const docRef = doc(db, 'shopping-lists', currentSyncId);
+                await setDoc(docRef, dataToSave);
+                
+                lastSyncTime = Date.now();
+                updateSyncStatus('已同步到云端');
+                showSaveIndicator();
+                return true;
+            } catch (error) {
+                console.error('保存到云端失败:', error);
+                updateSyncStatus('同步失败', 'error');
+                // 备份到本地存储
+                saveToLocalStorage();
+                return false;
+            }
+        }
+
+        // 从云端加载
+        async function loadFromCloud() {
+            if (!isCloudMode || !currentSyncId) {
+                loadFromLocalStorage();
+                return false;
+            }
+
+            try {
+                updateSyncStatus('正在加载...', 'syncing');
+                
+                const docRef = doc(db, 'shopping-lists', currentSyncId);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    const cloudData = docSnap.data();
+                    if (cloudData.data) {
+                        shoppingData = cloudData.data;
+                        lastSyncTime = cloudData.timestamp || Date.now();
+                        updateSyncStatus('已从云端加载');
+                        console.log('数据从云端加载成功');
+                        return true;
+                    }
+                }
+                
+                // 如果云端没有数据，上传当前数据
+                await saveToCloud();
+                updateSyncStatus('已上传到云端');
+                console.log('初始数据已上传到云端');
+                return false;
+            } catch (error) {
+                console.error('从云端加载失败:', error);
+                updateSyncStatus('加载失败', 'error');
+                // 尝试从本地存储加载
+                loadFromLocalStorage();
+                return false;
+            }
+        }
+
+        // 设置云端监听
+        function setupCloudListener() {
+            if (!isCloudMode || !currentSyncId) return;
+            
+            const docRef = doc(db, 'shopping-lists', currentSyncId);
+            
+            unsubscribe = onSnapshot(docRef, (doc) => {
+                if (doc.exists()) {
+                    const cloudData = doc.data();
+                    
+                    // 避免自己的更新触发重新渲染
+                    if (cloudData.timestamp && cloudData.timestamp > lastSyncTime) {
+                        console.log('检测到云端数据更新');
+                        shoppingData = cloudData.data;
+                        lastSyncTime = cloudData.timestamp;
+                        renderShoppingList();
+                        updateSyncStatus('已同步最新数据');
+                    }
+                }
+            }, (error) => {
+                console.error('云端监听失败:', error);
+                updateSyncStatus('监听失败', 'error');
+            });
+        }
+
+        // 停止云端监听
+        function stopCloudListener() {
+            if (unsubscribe) {
+                unsubscribe();
+                unsubscribe = null;
+            }
+        }
+
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            try {
+                localStorage.setItem('shoppingListData', JSON.stringify(shoppingData));
+                if (!isCloudMode) {
+                    showSaveIndicator();
+                }
+            } catch (error) {
+                console.error('保存到本地存储失败:', error);
+            }
+        }
+
+        // 从本地存储加载
+        function loadFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('shoppingListData');
+                if (savedData) {
+                    shoppingData = JSON.parse(savedData);
+                    console.log('从本地存储加载数据成功');
+                }
+            } catch (error) {
+                console.error('从本地存储加载失败:', error);
+            }
+        }
+
         // 保存数据
         async function saveData() {
-            if (isSignedIn) {
-                await saveToGoogleDrive();
+            if (isCloudMode) {
+                await saveToCloud();
             } else {
                 saveToLocalStorage();
+            }
+        }
+
+        // 手动同步
+        async function manualSync() {
+            if (isCloudMode) {
+                await saveToCloud();
+            } else {
+                saveToLocalStorage();
+                showSaveIndicator();
+            }
+        }
+
+        // 更换同步ID
+        function changeSyncId() {
+            if (confirm('更换同步ID将断开当前云端连接，确定要继续吗？')) {
+                stopCloudListener();
+                
+                // 显示设置界面
+                document.getElementById('syncSetup').classList.remove('hidden');
+                document.getElementById('statsSection').classList.add('hidden');
+                document.getElementById('controlsSection').classList.add('hidden');
+                document.getElementById('shoppingList').classList.add('hidden');
+                document.getElementById('floatingSummary').classList.add('hidden');
+                
+                // 清空输入框
+                document.getElementById('syncIdInput').value = '';
+                updateSyncStatus('等待设置同步ID', 'offline');
             }
         }
 
@@ -1548,9 +1384,12 @@
             // 手动同步
             document.getElementById('syncBtn').addEventListener('click', manualSync);
 
-            // 登录/登出
-            document.getElementById('signInBtn').addEventListener('click', signIn);
-            document.getElementById('signOutBtn').addEventListener('click', signOut);
+            // 更换同步ID
+            document.getElementById('changeSyncBtn').addEventListener('click', changeSyncId);
+
+            // 同步设置按钮
+            document.getElementById('startSyncBtn').addEventListener('click', startCloudSync);
+            document.getElementById('localModeBtn').addEventListener('click', startLocalMode);
 
             // 物品模态框事件
             document.getElementById('saveItemBtn').addEventListener('click', saveItem);
@@ -1717,13 +1556,13 @@
         }
 
         // 编辑物品
-        function editItem(itemId, areaId) {
+        window.editItem = function(itemId, areaId) {
             editingItem = { id: itemId, areaId: areaId };
             showItemModal('编辑物品');
         }
 
         // 删除物品
-        function deleteItem(itemId, areaId) {
+        window.deleteItem = function(itemId, areaId) {
             if (confirm('确定要删除这个物品吗？')) {
                 const area = shoppingData.areas[areaId];
                 const itemIndex = area.items.findIndex(item => item.id === itemId);
@@ -1737,13 +1576,13 @@
         }
 
         // 编辑区域
-        function editArea(areaId) {
+        window.editArea = function(areaId) {
             editingArea = areaId;
             showAreaModal('编辑区域');
         }
 
         // 删除区域
-        function deleteArea(areaId) {
+        window.deleteArea = function(areaId) {
             const area = shoppingData.areas[areaId];
             if (area.items.length > 0) {
                 if (!confirm('该区域还有物品，确定要删除吗？所有物品也会被删除。')) {
@@ -1785,28 +1624,25 @@
             setupModals();
             setupFloatingSummary();
             
-            // 延迟初始化Google API，确保所有脚本都已加载
-            setTimeout(() => {
-                initializeGapi();
-            }, 1000);
+            // 检查是否有保存的同步ID
+            const savedSyncId = localStorage.getItem('shoppingSyncId');
+            if (savedSyncId) {
+                document.getElementById('syncIdInput').value = savedSyncId;
+                // 自动启动云端同步
+                setTimeout(() => {
+                    startCloudSync();
+                }, 1000);
+            } else {
+                updateSyncStatus('等待设置同步ID', 'offline');
+            }
         }
 
         // 页面加载完成后初始化
         document.addEventListener('DOMContentLoaded', init);
 
-        // 确保Google API脚本加载完成后再初始化
-        window.addEventListener('load', () => {
-            setTimeout(() => {
-                if (!tokenClient && !isSignedIn) {
-                    console.log('页面加载完成，重新尝试初始化Google API');
-                    initializeGapi();
-                }
-            }, 2000);
-        });
-
-        // 页面卸载时停止自动同步
+        // 页面卸载时停止监听
         window.addEventListener('beforeunload', () => {
-            stopAutoSync();
+            stopCloudListener();
         });
     </script>
 </body>
